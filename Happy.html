@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heart Tree Birthday</title>
+<style>
+       body {
+           margin: 0;
+           background: black;
+           overflow: hidden;
+           font-family: "Courier New", monospace;
+       }
+       canvas {
+           display: block;
+       }
+       .heart-btn {
+           position: absolute;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           font-size: 50px;
+           cursor: pointer;
+           transition: 2s ease-in;
+           z-index: 10;
+       }
+       /* RESPONSIVE MESSAGE */
+       #message {
+           position: absolute;
+           top: 6%;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 90%;
+           max-width: 800px;
+           padding: 0 20px;
+           box-sizing: border-box;
+           text-align: center;
+           color: white;
+           font-size: clamp(18px, 4vw, 32px);
+           font-weight: bold;
+           line-height: 1.7;
+           white-space: pre-line;
+           word-wrap: break-word;
+           opacity: 0;
+           text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+           z-index: 5;
+       }
+       .cursor {
+           display: inline-block;
+           width: 8px;
+           background: white;
+           margin-left: 4px;
+           animation: blink 1s infinite;
+       }
+       @keyframes blink {
+           0%, 50%, 100% { opacity: 1; }
+           25%, 75% { opacity: 0; }
+       }
+</style>
+</head>
+<body>
+<div class="heart-btn" id="btn" onclick="start()">❤️</div>
+<div id="message"></div>
+<canvas id="canvas"></canvas>
+<script>
+       const canvas = document.getElementById("canvas");
+       const ctx = canvas.getContext("2d");
+       const messageDiv = document.getElementById("message");
+       function resize() {
+           canvas.width = window.innerWidth;
+           canvas.height = window.innerHeight;
+           groundY = canvas.height * 0.85;
+       }
+       window.addEventListener('resize', resize);
+       let trunkProgress = 0;
+       let leaves = [];
+       let particles = [];
+       let growing = false;
+       let trunkTopY;
+       let canopyCreated = false;
+       let leafIndexes = [];
+       let leafBatchCount = 0;
+       let groundY = window.innerHeight * 0.85;
+       let zoomScale = 1;
+       let zooming = false;
+       resize();
+       /* FINAL MESSAGE */
+       const textContent =
+`Hey you 💖
+Happy birthday 🎂
+May God bless you and give you
+many happiness ✨
+Just saying... you're pretty 😊
+Hope you have a great life ahead 🌸
+And somewhere in that beautiful life…
+I would really like to be a part of it ❤️`;
+       function start() {
+           const btn = document.getElementById("btn");
+           btn.style.top = "85%";
+           btn.style.opacity = "0";
+           setTimeout(() => {
+               btn.style.display = "none";
+               trunkProgress = 0;
+               canopyCreated = false;
+               leafBatchCount = 0;
+               leaves = [];
+               leafIndexes = [];
+               growing = true;
+               createParticles();
+               requestAnimationFrame(animate);
+           }, 2000);
+       }
+       function drawGround() {
+           ctx.beginPath();
+           ctx.moveTo(0, groundY);
+           ctx.lineTo(canvas.width, groundY);
+           ctx.strokeStyle = "rgba(255, 105, 180, 0.7)";
+           ctx.lineWidth = 3;
+           ctx.stroke();
+       }
+       function drawTrunk(progress) {
+           const baseX = canvas.width / 2;
+           const baseY = groundY;
+           const maxHeight = canvas.height * 0.35;
+           const height = maxHeight * progress;
+           trunkTopY = baseY - height;
+           ctx.beginPath();
+           ctx.moveTo(baseX - 35, baseY);
+           ctx.bezierCurveTo(baseX - 50, baseY - height * 0.3,
+                             baseX - 25, baseY - height * 0.75,
+                             baseX - 12, trunkTopY);
+           ctx.lineTo(baseX + 12, trunkTopY);
+           ctx.bezierCurveTo(baseX + 25, baseY - height * 0.75,
+                             baseX + 50, baseY - height * 0.3,
+                             baseX + 35, baseY);
+           ctx.closePath();
+           let g = ctx.createLinearGradient(0, trunkTopY, 0, baseY);
+           g.addColorStop(0, "#ffb6c1");
+           g.addColorStop(1, "#ff69b4");
+           ctx.fillStyle = g;
+           ctx.fill();
+       }
+       function createLeaves(centerX, centerY) {
+           const scale = 14;
+           for (let i = 0; i < 900; i++) {
+               let t = Math.random() * Math.PI * 2;
+               let r = Math.random();
+               let x = r * 16 * Math.pow(Math.sin(t), 3);
+               let y = r * (13 * Math.cos(t) - 5 * Math.cos(2 * t)
+                       - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+               leaves.push({
+                   x: centerX + x * scale,
+                   y: centerY - y * scale,
+                   size: Math.random() * 6 + 4,
+                   color: getColor()
+               });
+           }
+           leafIndexes = [...Array(leaves.length).keys()]
+               .sort(() => Math.random() - 0.5);
+       }
+       function getColor() {
+           const colors = ["#ff4d6d", "#ff758f", "#ffd166", "#f72585", "#ffbe0b"];
+           return colors[Math.floor(Math.random() * colors.length)];
+       }
+       function drawHeart(x, y, size, color) {
+           ctx.save();
+           ctx.shadowColor = color;
+           ctx.shadowBlur = 15;
+           ctx.fillStyle = color;
+           ctx.beginPath();
+           ctx.moveTo(x, y);
+           ctx.bezierCurveTo(x - size, y - size,
+                             x - size * 2, y + size / 3,
+                             x, y + size * 2);
+           ctx.bezierCurveTo(x + size * 2, y + size / 3,
+                             x + size, y - size,
+                             x, y);
+           ctx.fill();
+           ctx.restore();
+       }
+       function createParticles() {
+           for (let i = 0; i < 40; i++) {
+               particles.push({
+                   x: Math.random() * canvas.width,
+                   y: Math.random() * canvas.height,
+                   size: Math.random() * 3 + 1,
+                   speed: Math.random() * 0.5 + 0.2
+               });
+           }
+       }
+       function drawParticles() {
+           ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+           particles.forEach(p => {
+               ctx.beginPath();
+               ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+               ctx.fill();
+               p.y -= p.speed;
+               if (p.y < 0) p.y = canvas.height;
+           });
+       }
+       function typeWriter(text, i = 0) {
+           if (i < text.length) {
+               messageDiv.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
+               setTimeout(() => typeWriter(text, i + 1), 40);
+           } else {
+               messageDiv.innerHTML = text;
+           }
+       }
+       function animate() {
+           ctx.clearRect(0, 0, canvas.width, canvas.height);
+           ctx.save();
+           ctx.translate(canvas.width / 2, canvas.height / 2);
+           ctx.scale(zoomScale, zoomScale);
+           ctx.translate(-canvas.width / 2, -canvas.height / 2);
+           drawParticles();
+           drawGround();
+           if (trunkProgress < 1) {
+               trunkProgress += 0.02;
+           }
+           drawTrunk(trunkProgress);
+           if (trunkProgress >= 1 && !canopyCreated) {
+               createLeaves(canvas.width / 2, trunkTopY - 120);
+               canopyCreated = true;
+           }
+           if (canopyCreated) {
+               leafBatchCount += 20;
+               for (let i = 0; i < leafBatchCount && i < leafIndexes.length; i++) {
+                   let l = leaves[leafIndexes[i]];
+                   drawHeart(l.x, l.y, l.size, l.color);
+               }
+               if (leafBatchCount > leafIndexes.length + 100 && !zooming) {
+                   zooming = true;
+               }
+           }
+           ctx.restore();
+           if (zooming && zoomScale > 0.75) {
+               zoomScale -= 0.003;
+           }
+           if (zoomScale <= 0.75) {
+               messageDiv.style.opacity = 1;
+               if (!messageDiv.dataset.started) {
+                   messageDiv.dataset.started = true;
+                   typeWriter(textContent);
+               }
+           }
+           if (growing) {
+               requestAnimationFrame(animate);
+           }
+       }
+</script>
+</body>
+</html>
