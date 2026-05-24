@@ -24,6 +24,7 @@
   }
 
   /* ── BACKGROUND VIDEO CONTAINER ── */
+  /* Fixed to fully fit the screen perfectly without any shift actions */
   .video-container {
     position: fixed; 
     inset: 0;
@@ -31,25 +32,19 @@
     height: 100%;
     z-index: 0;
     overflow: hidden;
-    transition: transform 1.8s cubic-bezier(0.77, 0, 0.175, 1);
-    transform: translateX(0);
-  }
-
-  /* Shifting dynamic animation space to match left-split focus */
-  .video-container.shift-left {
-    transform: translateX(-25%);
   }
 
   video {
     width: 100%; 
     height: 100%;
     object-fit: cover;
+    object-position: center; /* Keeps the video perfectly centered */
   }
 
   .video-overlay {
     position: absolute; 
     inset: 0;
-    background: radial-gradient(circle at center, transparent 20%, rgba(13, 5, 8, 0.5) 80%);
+    background: radial-gradient(circle at center, transparent 10%, rgba(13, 5, 8, 0.6) 90%);
     z-index: 1;
   }
 
@@ -156,11 +151,11 @@
     .text-column {
       grid-column: 1;
       padding-left: 0;
-      justify-content: flex-end;
-      padding-bottom: 40px;
-    }
-    .video-container.shift-left {
-      transform: translateY(-15%); 
+      justify-content: center; /* Centered layout for readability on mobile overlay */
+      padding-bottom: 0;
+      background: rgba(13, 5, 8, 0.4); /* Subtle backing shade to assist text clarity */
+      border-radius: 16px;
+      padding: 20px;
     }
   }
 
@@ -207,7 +202,6 @@ function loadData() {
   const dataParam = urlParams.get('d');
   if (dataParam) {
     try {
-      // Safe decryption processing unicode emojis cleanly
       const binStr = atob(dataParam);
       const bytes = new Uint8Array(binStr.length);
       for (let i = 0; i < binStr.length; i++) {
@@ -227,17 +221,12 @@ function loadData() {
 }
 loadData();
 
-// ── TIMING LOGIC ──
-const video = document.getElementById('bg-video');
-const videoWindow = document.getElementById('video-window');
-
-// Wait for a brief window on startup, then scale out into the text display state
-setTimeout(() => {
-  if (!videoWindow.classList.contains('shift-left')) {
-    videoWindow.classList.add('shift-left');
+// Start the typewriter engine smoothly shortly after loading
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
     startTypingSequence();
-  }
-}, 3200);
+  }, 1500);
+});
 
 // ── TYPEWRITER ENGINE ──
 function typeText(element, text, speed, callback) {
