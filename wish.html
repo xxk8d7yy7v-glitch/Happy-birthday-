@@ -5,231 +5,347 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A Magical Gift For You</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400&display=swap');
+        
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden;
-            background: linear-gradient(to bottom, #1a0f2e, #392257, #623e75);
-            font-family: 'Georgia', serif;
+            background: radial-gradient(circle at center, #2d123d 0%, #12071c 70%, #050208 100%);
+            font-family: 'Poppins', sans-serif;
         }
         #interactionOverlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
-            background: rgba(26, 15, 46, 0.85);
-            color: #ffe5ec; font-size: 24px; text-align: center;
-            cursor: pointer; z-index: 10; transition: opacity 1s;
-            text-shadow: 0 0 10px rgba(255,182,193,0.6);
+            background: rgba(13, 5, 20, 0.9);
+            color: #fff0f5; font-size: 22px; text-align: center;
+            cursor: pointer; z-index: 10; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
         }
-        .pulse { animation: pulseGlow 2s infinite; }
-        @keyframes pulseGlow {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
+        .pulse-text {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 300;
+            letter-spacing: 2px;
+            animation: etherealGlow 2.5s infinite ease-in-out;
         }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        @keyframes etherealGlow {
+            0% { opacity: 0.5; transform: scale(0.98); text-shadow: 0 0 10px rgba(255,182,193,0); }
+            50% { opacity: 1; transform: scale(1); text-shadow: 0 0 25px rgba(255,105,180,0.8), 0 0 10px rgba(255,182,193,0.5); }
+            100% { opacity: 0.5; transform: scale(0.98); text-shadow: 0 0 10px rgba(255,182,193,0); }
+        }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        
         #messageDisplay {
-            position: absolute; bottom: 10%; left: 50%;
-            transform: translateX(-50%);
-            width: 80%; max-width: 600px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 25px; border-radius: 20px;
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 194, 209, 0.3);
-            color: #fff; text-align: center; font-size: 20px;
-            line-height: 1.6; opacity: 0; z-index: 5;
-            transition: opacity 2s ease-in-out, transform 2s ease-in-out;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+            position: absolute; bottom: 8%; left: 50%;
+            transform: translate(-50%, 30px);
+            width: 85%; max-width: 550px;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 30px; border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 182, 193, 0.2);
+            color: #fff; text-align: center; opacity: 0; z-index: 5;
+            transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
         }
+        .main-wish {
+            font-family: 'Great Vibes', cursive;
+            font-size: 42px;
+            color: #ffb3c6;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255, 133, 161, 0.5);
+        }
+        .sub-text { font-size: 15px; color: #e0cedb; line-height: 1.6; font-weight: 300; }
     </style>
 </head>
 <body>
 
 <div id="interactionOverlay" onclick="startMagic()">
-    <div class="pulse">🌸 Tap anywhere on the screen to reveal your magic 🌸</div>
+    <div class="pulse-text">🌸 Tap to plant a magical seed 🌸</div>
 </div>
 
 <canvas id="canvas"></canvas>
-<div id="messageDisplay"></div>
+<div id="messageDisplay">
+    <div class="main-wish" id="wishTitle">For You</div>
+    <div class="sub-text" id="wishBody"></div>
+</div>
 
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
 
-    // Decode URL message
     function getMessage() {
         const urlParams = new URLSearchParams(window.location.search);
         const msgBase64 = urlParams.get('msg');
         if (msgBase64) {
-            try {
-                return decodeURIComponent(escape(atob(msgBase64)));
-            } catch (e) {
-                return "Wishing you a wonderful and magical day! 🌸";
-            }
+            try { return decodeURIComponent(escape(atob(msgBase64))); } catch (e) { }
         }
-        return "Have a beautiful, wonderful day! 🌸 (Create your own custom link using index.html)";
+        return "May your day be filled with love, laughter, and endless beauty. Happy Celebration! 🌸";
     }
+    document.getElementById('wishBody').innerText = getMessage();
 
-    document.getElementById('messageDisplay').innerText = getMessage();
+    // High quality rendering configuration
+    const heartCenterX = width / 2;
+    const heartCenterY = height * 0.42; 
+    const heartScale = Math.min(width, height) * 0.016; // Perfectly scales across mobile and desktop
+
+    let branches = [];
+    let stationaryBlossoms = [];
+    let fallingPetals = [];
+    let magicParticles = [];
+    let animationFrameId;
+    let magicActive = false;
+
+    // Heart geometry equation path checker
+    function isInHeartShape(x, y) {
+        // Transform canvas pixel coordinates to relative Cartesian coordinates
+        const nx = (x - heartCenterX) / heartScale;
+        const ny = -(y - heartCenterY) / heartScale; // invert Y for standard math orientation
+        
+        // Classic Heart Curve Formula: (x^2 + y^2 - 1)^3 - x^2 * y^3 <= 0
+        const equation = Math.pow(nx*nx + ny*ny - 1, 3) - nx*nx * Math.pow(ny, 3);
+        return equation <= 0.05; 
+    }
 
     function startMagic() {
+        if(magicActive) return;
+        magicActive = true;
+        
         const overlay = document.getElementById('interactionOverlay');
         overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 1000);
+        setTimeout(() => overlay.remove(), 1200);
 
-        // Animate the falling seed, then trigger tree growth
-        animateSeed(() => {
-            growTree();
-        });
+        animateSeed();
     }
 
-    // 1. Seed Animation
-    function animateSeed(callback) {
-        let seedY = 0;
-        const targetY = canvas.height - 50;
-        const seedX = canvas.width / 2;
+    // 1. Fluid Fluid Seed Drop & Shockwave Particle Sequence
+    function animateSeed() {
+        let seed = { x: width / 2, y: -20, vy: 0, ay: 0.25 };
+        const targetY = height * 0.82;
 
         function fall() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, width, height);
             
-            // Draw a tiny glowing seed
-            ctx.beginPath();
-            ctx.arc(seedX, seedY, 6, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffb3c6';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff477e';
-            ctx.fill();
-            ctx.shadowBlur = 0; // reset
+            seed.vy += seed.ay;
+            seed.y += seed.vy;
 
-            if (seedY < targetY) {
-                seedY += 5;
+            // Draw soft glowing trail
+            let trailGlow = ctx.createRadialGradient(seed.x, seed.y, 0, seed.x, seed.y, 15);
+            trailGlow.addColorStop(0, '#ffffff');
+            trailGlow.addColorStop(0.3, '#ff85a1');
+            trailGlow.addColorStop(1, 'rgba(45,18,61,0)');
+            ctx.fillStyle = trailGlow;
+            ctx.beginPath();
+            ctx.arc(seed.x, seed.y, 15, 0, Math.PI*2);
+            ctx.fill();
+
+            // Core of the seed
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(seed.x, seed.y, 4, 0, Math.PI*2);
+            ctx.fill();
+
+            if (seed.y < targetY) {
                 requestAnimationFrame(fall);
             } else {
-                // Flash effect upon hitting the floor
-                ctx.beginPath();
-                ctx.arc(seedX, targetY, 20, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(255, 194, 209, 0.4)";
-                ctx.fill();
-                setTimeout(callback, 300);
+                // Spark burst dynamic splash
+                for(let i=0; i<45; i++){
+                    magicParticles.push({
+                        x: seed.x, y: targetY,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: -Math.random() * 5 - 2,
+                        alpha: 1,
+                        color: ['#ffb3c6','#ff85a1','#ffffff','#ffe5ec'][Math.floor(Math.random()*4)]
+                    });
+                }
+                initTreeStructure();
+                loop();
             }
         }
         fall();
     }
 
-    // 2. Tree Generation Logic
-    let branches = [];
-    let petals = [];
-
-    function createBranch(startX, startY, len, angle, branchWidth, depth) {
-        branches.push({ startX, startY, len, angle, branchWidth, depth, currentLen: 0 });
+    // 2. High-Fidelity Tree Blueprint Construction
+    function createBranchData(startX, startY, len, angle, branchWidth, depth) {
+        branches.push({
+            startX, startY, len, angle, branchWidth, depth,
+            currentLen: 0,
+            speed: Math.max(0.5, 4.5 - depth * 0.6), // natural tapered progression
+            childSpawned: false
+        });
     }
 
-    function growTree() {
-        // Initialize trunk
-        createBranch(canvas.width / 2, canvas.height, 110, -Math.PI / 2, 14, 0);
-        animateGrowth();
+    function initTreeStructure() {
+        // Base main trunk
+        createBranchData(width / 2, height, height * 0.18, -Math.PI / 2, 18, 0);
     }
 
-    function animateGrowth() {
-        let growing = false;
-        ctx.shadowBlur = 0;
+    // Main animation loop engine
+    function loop() {
+        animationFrameId = requestAnimationFrame(loop);
+        
+        // Layer 1: Clear canvas with very slight frame persistence for smooth motion blur properties
+        ctx.fillStyle = 'rgba(21, 9, 28, 0.12)'; 
+        ctx.fillRect(0, 0, width, height);
 
-        // Draw branches progression
+        // Layer 2: Draw Ground Splashes
+        updateParticles();
+
+        // Layer 3: Grow & Style Organic Branches
+        let treeFinished = true;
+        
         for (let i = 0; i < branches.length; i++) {
             let b = branches[i];
             if (b.currentLen < b.len) {
-                b.currentLen += 2; // growth speed
-                growing = true;
+                b.currentLen += b.speed;
+                treeFinished = false;
             }
 
-            // Calculate current end position
             let endX = b.startX + Math.cos(b.angle) * b.currentLen;
             let endY = b.startY + Math.sin(b.angle) * b.currentLen;
+
+            // Sleek cinematic bark brush detailing using smooth linear gradient overlays
+            let trunkGrad = ctx.createLinearGradient(b.startX, b.startY, endX, endY);
+            trunkGrad.addColorStop(0, '#261410');
+            trunkGrad.addColorStop(0.5, '#42251d');
+            trunkGrad.addColorStop(1, '#1c0d0a');
 
             ctx.beginPath();
             ctx.moveTo(b.startX, b.startY);
             ctx.lineTo(endX, endY);
-            ctx.lineWidth = b.branchWidth;
-            ctx.strokeStyle = '#3d2314'; // Trunk wood color
+            ctx.lineWidth = Math.max(0.8, b.branchWidth * (1 - (b.currentLen / b.len) * 0.25));
+            ctx.strokeStyle = trunkGrad;
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // Spawn smaller branches once current branch finishes growing
-            if (b.currentLen >= b.len && !b.spawned && b.depth < 5) {
-                b.spawned = true;
-                let numBranches = 2 + Math.floor(Math.random() * 2); 
-                for (let j = 0; j < numBranches; j++) {
-                    let newAngle = b.angle + (Math.random() - 0.5) * 0.6;
-                    let newLen = b.len * (0.7 + Math.random() * 0.2);
-                    createBranch(endX, endY, newLen, newAngle, b.branchWidth * 0.65, b.depth + 1);
+            // Branch Spawning Mechanics
+            if (b.currentLen >= b.len && !b.childSpawned && b.depth < 7) {
+                b.childSpawned = true;
+                let branchesCount = b.depth === 0 ? 3 : (Math.random() < 0.2 ? 3 : 2);
+                
+                for (let j = 0; j < branchesCount; j++) {
+                    // Bias angles upward to reach toward the heart constraint target domain smoothly
+                    let angleVariation = (Math.random() - 0.5) * 0.65;
+                    let nextAngle = b.angle + angleVariation;
+                    let nextLen = b.len * (0.72 + Math.random() * 0.15);
+                    let nextWidth = b.branchWidth * 0.62;
+
+                    createBranchData(endX, endY, nextLen, nextAngle, nextWidth, b.depth + 1);
                 }
             }
 
-            // If it's a leaf node/deep branch, sprinkle cherry blossoms
-            if (b.depth >= 3 && b.currentLen >= b.len && Math.random() < 0.15) {
-                spawnPetals(endX, endY);
+            // High Density Blossom Spawning inside the targeted geometric mathematical boundaries
+            if (b.depth >= 3 && Math.random() < 0.35) {
+                // Introduce randomness radius to blend branches seamlessly into clusters
+                let testX = endX + (Math.random() - 0.5) * 55;
+                let testY = endY + (Math.random() - 0.5) * 55;
+
+                if (isInHeartShape(testX, testY)) {
+                    if (stationaryBlossoms.length < 1200) { // High density threshold ceiling
+                        stationaryBlossoms.push({
+                            x: testX, y: testY,
+                            size: 0, targetSize: Math.random() * 6 + 3,
+                            color: ['#ffc2d1', '#ffe5ec', '#ffb3c6', '#ff85a1', '#f7a1b9'][Math.floor(Math.random() * 5)],
+                            alpha: 0
+                        });
+                    }
+                }
             }
         }
 
-        if (growing) {
-            requestAnimationFrame(animateGrowth);
-        } else {
-            // Once tree finishes growing, softly bring up text and begin drifting petals
-            document.getElementById('messageDisplay').style.opacity = '1';
-            document.getElementById('messageDisplay').style.transform = 'translateX(-50%) translateY(-10px)';
-            animateBackgroundPetals();
+        // Layer 4: Render static leaf mesh clusters gracefully scaling out
+        renderStationaryBlossoms();
+
+        // Layer 5: Handle background interactive leaf drifts
+        if (treeFinished && branches.length > 0) {
+            // Trigger UI element pop in 
+            const msg = document.getElementById('messageDisplay');
+            msg.style.opacity = '1';
+            msg.style.transform = 'translate(-50%, 0)';
+
+            // Spawn ambient continuous falling petals dynamically
+            if(Math.random() < 0.12 && fallingPetals.length < 100) {
+                fallingPetals.push({
+                    x: Math.random() * width,
+                    y: -10,
+                    size: Math.random() * 4 + 3,
+                    speedY: Math.random() * 1.2 + 0.8,
+                    speedX: Math.random() * 1 - 0.5,
+                    wobble: Math.random() * 10,
+                    wobbleSpeed: Math.random() * 0.03 + 0.01
+                });
+            }
+        }
+        updateFallingPetals();
+    }
+
+    function renderStationaryBlossoms() {
+        for (let i = 0; i < stationaryBlossoms.length; i++) {
+            let p = stationaryBlossoms[i];
+            if (p.size < p.targetSize) {
+                p.size += 0.15; // smooth blossom scaling factor
+                if(p.alpha < 1) p.alpha += 0.04;
+            }
+            
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            
+            // Soft blur backing glow to eradicate hard pixel standard canvas looks
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = p.color;
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            ctx.restore();
         }
     }
 
-    function spawnPetals(x, y) {
-        // Draw standard clusters static on tree
-        ctx.beginPath();
-        ctx.arc(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20, 4 + Math.random() * 5, 0, Math.PI * 2);
-        ctx.fillStyle = ['#ffc2d1', '#ffe5ec', '#ffb3c6', '#ff85a1'][Math.floor(Math.random() * 4)];
-        ctx.fill();
+    function updateParticles() {
+        for(let i = magicParticles.length - 1; i >= 0; i--) {
+            let p = magicParticles[i];
+            p.x += p.vx; p.y += p.vy;
+            p.alpha -= 0.015;
+            if(p.alpha <= 0) { magicParticles.splice(i, 1); continue; }
+            
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+        }
     }
 
-    // 3. Falling Petals Animation Loop
-    for (let i = 0; i < 40; i++) {
-        petals.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            r: 3 + Math.random() * 4,
-            d: Math.random() * 10,
-            speed: 1 + Math.random() * 2,
-            wobble: Math.random() * 2
-        });
-    }
+    function updateFallingPetals() {
+        for (let i = fallingPetals.length - 1; i >= 0; i--) {
+            let p = fallingPetals[i];
+            p.y += p.speedY;
+            p.x += p.speedX + Math.sin(p.wobble) * 0.6;
+            p.wobble += p.wobbleSpeed;
 
-    function animateBackgroundPetals() {
-        // Re-draw background scene over canvas dynamically while preserving the tree snapshot
-        // To keep it simple without complex canvas buffers, we let background petals fall gracefully on top
-        ctx.fillStyle = "rgba(26, 15, 46, 0.04)"; // slight trails
-        
-        setInterval(() => {
-            petals.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffb3c6';
-                ctx.fill();
+            ctx.save();
+            ctx.beginPath();
+            // Render non-uniform realistic leaf ellipses instead of primitive spheres
+            ctx.ellipse(p.x, p.y, p.size, p.size * 0.6, Math.sin(p.wobble), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 179, 198, 0.85)';
+            ctx.fill();
+            ctx.restore();
 
-                p.y += p.speed;
-                p.x += Math.sin(p.wobble) * 0.5;
-                p.wobble += 0.05;
-
-                if (p.y > canvas.height) {
-                    p.y = -10;
-                    p.x = Math.random() * canvas.width;
-                }
-            });
-        }, 30);
+            if (p.y > height + 10) {
+                fallingPetals.splice(i, 1);
+            }
+        }
     }
 
     window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Safe resize protection handling 
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
     });
 </script>
 </body>
