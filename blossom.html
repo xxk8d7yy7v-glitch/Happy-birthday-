@@ -24,7 +24,6 @@
   }
 
   /* ── BACKGROUND VIDEO CONTAINER ── */
-  /* This container will smoothly shift to the left side when the 'shift-left' class is added */
   .video-container {
     position: fixed; 
     inset: 0;
@@ -36,7 +35,7 @@
     transform: translateX(0);
   }
 
-  /* When shifted, moves the video window left on wide screens */
+  /* Shifting dynamic animation space to match left-split focus */
   .video-container.shift-left {
     transform: translateX(-25%);
   }
@@ -47,28 +46,27 @@
     object-fit: cover;
   }
 
-  /* Subtle vignette over the video to help text visibility */
   .video-overlay {
     position: absolute; 
     inset: 0;
-    background: radial-gradient(circle at center, transparent 20%, rgba(13, 5, 8, 0.4) 80%);
+    background: radial-gradient(circle at center, transparent 20%, rgba(13, 5, 8, 0.5) 80%);
     z-index: 1;
   }
 
-  /* ── TEXT OVERLAY LAYOUT (NO CONTAINER) ── */
+  /* ── TEXT OVERLAY LAYOUT ── */
   .content-container {
     position: relative; 
     z-index: 10;
     width: 100%; 
     height: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Pushes text to the right side of the screen */
+    grid-template-columns: 1fr 1fr; 
     padding: 60px;
-    pointer-events: none; /* Allows interactions to pass through to the video if needed */
+    pointer-events: none; 
   }
 
   .text-column {
-    grid-column: 2; /* Forces the text to occupy only the right half */
+    grid-column: 2; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -76,7 +74,6 @@
     padding-left: 40px;
   }
 
-  /* Typography styling without borders, background boxes, or cards */
   .recipient-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(32px, 4.5vw, 46px);
@@ -85,7 +82,7 @@
     margin-bottom: 28px;
     color: #fff;
     line-height: 1.2;
-    min-height: 55px; /* Prevents layout shifting during typing */
+    min-height: 55px; 
   }
 
   .recipient-title em {
@@ -130,13 +127,13 @@
     letter-spacing: 0.02em;
   }
 
-  /* Blinking typing cursor effect */
+  /* Blinking typewriter cursor indicator */
   .cursor {
     display: inline-block;
     width: 2px;
-    height: 0.8em;
+    height: 0.9em;
     background-color: var(--pink-soft);
-    margin-left: 3px;
+    margin-left: 4px;
     animation: blink 0.8s infinite;
     vertical-align: middle;
   }
@@ -150,7 +147,7 @@
   body.theme-gold { --pink-soft: #ffe082; --gold: #ffb300; }
   body.theme-ocean { --pink-soft: #80deea; --gold: #26a69a; }
 
-  /* Mobile Responsive adjustments */
+  /* Mobile Layout Adjustments */
   @media (max-width: 900px) {
     .content-container {
       grid-template-columns: 1fr;
@@ -163,31 +160,35 @@
       padding-bottom: 40px;
     }
     .video-container.shift-left {
-      transform: translateY(-15%); /* Shifts video upward instead on mobile viewports */
+      transform: translateY(-15%); 
     }
   }
 
   .audio-hint {
     position: absolute; bottom: 20px; left: 20px;
-    z-index: 15; background: rgba(0,0,0,0.4);
+    z-index: 15; background: rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.15);
     padding: 8px 14px; border-radius: 30px;
     font-size: 12px; font-weight: 200; cursor: pointer;
     letter-spacing: 0.05em; transition: 0.3s; pointer-events: auto;
+    user-select: none;
+  }
+  .audio-hint:hover {
+    background: rgba(255,255,255,0.1);
   }
 </style>
 </head>
 <body class="theme-sakura">
 
 <div class="video-container" id="video-window">
-  <video id="bg-video" autoplay muted playsinline>
+  <video id="bg-video" autoplay muted playsinline loop>
     <source src="Tree.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
   <div class="video-overlay"></div>
 </div>
 
-<div class="audio-hint" id="audio-toggle" onclick="toggleMute()">Mute Controls</div>
+<div class="audio-hint" id="audio-toggle" onclick="toggleMute()">🔇 Muted</div>
 
 <div class="content-container">
   <div class="text-column">
@@ -200,19 +201,27 @@
 <script>
 let wishData = { recipient: "Someone", message: "A beautiful wish...", sender: "", theme: "sakura" };
 
-// ── PARSE URL DATA ──
+// ── PARSE & DECODE LINK DATA ──
 function loadData() {
   const urlParams = new URLSearchParams(window.location.search);
   const dataParam = urlParams.get('d');
   if (dataParam) {
     try {
-      wishData = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
+      // Safe decryption processing unicode emojis cleanly
+      const binStr = atob(dataParam);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+      const jsonStr = new TextDecoder().decode(bytes);
+      wishData = JSON.parse(jsonStr);
+      
       if (wishData.theme) {
         document.body.className = '';
         document.body.classList.add(`theme-${wishData.theme}`);
       }
     } catch (e) {
-      console.error("Decoding error", e);
+      console.error("Decoding error processing parameters", e);
     }
   }
 }
@@ -222,44 +231,30 @@ loadData();
 const video = document.getElementById('bg-video');
 const videoWindow = document.getElementById('video-window');
 
-// Automatically fires when your video runs to completion
-video.addEventListener('ended', () => {
-  // 1. Shift video window to the left side
-  videoWindow.classList.add('shift-left');
-  
-  // 2. Wait for the shifting animation to finish (1.8 seconds), then begin typing words
-  setTimeout(() => {
-    startTypingSequence();
-  }, 1800);
-});
-
-// Fallback safety check: In case video fails to fire 'ended' event, start after 8s
+// Wait for a brief window on startup, then scale out into the text display state
 setTimeout(() => {
   if (!videoWindow.classList.contains('shift-left')) {
     videoWindow.classList.add('shift-left');
     startTypingSequence();
   }
-}, 8000);
-
+}, 3200);
 
 // ── TYPEWRITER ENGINE ──
 function typeText(element, text, speed, callback) {
   let index = 0;
-  element.innerHTML = ""; // Clear existing target
+  element.innerHTML = ""; 
   
-  // Create dynamic cursor element
   const cursor = document.createElement('span');
   cursor.className = 'cursor';
   element.appendChild(cursor);
 
   function type() {
     if (index < text.length) {
-      // Insert character right before the cursor node
       cursor.insertAdjacentText('beforebegin', text.charAt(index));
       index++;
       setTimeout(type, speed);
     } else {
-      cursor.remove(); // Drop cursor when this section is written
+      cursor.remove(); 
       if (callback) callback();
     }
   }
@@ -276,11 +271,8 @@ function startTypingSequence() {
   const bodyText = wishData.message || '';
   const signoffName = wishData.sender || '';
 
-  // Type Greeting first...
-  typeText(recipientTarget, greetingText, 70, () => {
-    // ...then type the primary message...
-    typeText(messageTarget, bodyText, 45, () => {
-      // ...finally, fade in the signature line smoothly
+  typeText(recipientTarget, greetingText, 60, () => {
+    typeText(messageTarget, bodyText, 40, () => {
       if (signoffName) {
         senderTarget.textContent = signoffName;
         signoffBlock.classList.add('show');
