@@ -173,6 +173,7 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 12px;
+    min-height: 34px;
   }
   .pick-pill {
     padding: 6px 14px;
@@ -367,13 +368,11 @@
 
 <div class="page-bg"></div>
 
-<!-- Decorative branches -->
 <svg class="deco-svg top-left" viewBox="0 0 400 380" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M-20,380 Q40,280 80,200 Q120,120 180,60 Q220,20 260,-10" stroke="#c2185b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
   <path d="M80,200 Q110,170 150,155 Q190,140 230,145" stroke="#c2185b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
   <path d="M120,140 Q145,110 170,95 Q200,78 230,82" stroke="#c2185b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
   <path d="M180,60 Q195,35 215,25 Q235,14 258,18" stroke="#c2185b" stroke-width="1" fill="none" stroke-linecap="round"/>
-  <!-- blossom clusters -->
   <g opacity="0.9">
     <circle cx="232" cy="144" r="6" fill="#f48fb1"/><circle cx="244" cy="138" r="5" fill="#f06292"/><circle cx="238" cy="150" r="4" fill="#fce4ec"/>
     <circle cx="254" cy="142" r="5" fill="#e91e8c"/><circle cx="228" cy="135" r="4" fill="#f8bbd9"/>
@@ -416,12 +415,11 @@
     <h1 class="headline">Plant a <em>Blossom</em> Wish</h1>
     <p class="subline">Create a living memory for someone you love</p>
 
-    <!-- Occasion -->
     <div class="form-section">
       <label>Occasion</label>
       <select id="occasion">
         <option value="">Choose your occasion…</option>
-        <option value="birthday">🎂 Birthday</option>
+        <option value="birthday" selected>🎂 Birthday</option>
         <option value="anniversary">💍 Anniversary</option>
         <option value="graduation">🎓 Graduation</option>
         <option value="new_year">🎊 New Year</option>
@@ -432,7 +430,6 @@
       </select>
     </div>
 
-    <!-- Names -->
     <div class="form-section">
       <div class="name-row">
         <div>
@@ -446,14 +443,12 @@
       </div>
     </div>
 
-    <!-- Message -->
     <div class="form-section">
       <label>Your Message</label>
       <textarea id="message" placeholder="Write your heartfelt words here…" maxlength="400"></textarea>
       <div class="quick-picks" id="wish-pills"></div>
     </div>
 
-    <!-- Theme -->
     <div class="form-section">
       <label>Bloom Theme</label>
       <div class="theme-grid">
@@ -477,7 +472,7 @@
         <button class="copy-btn" onclick="copyLink()">Copy</button>
         <button class="open-btn" onclick="openLink()">Open ↗</button>
       </div>
-      <p class="result-hint">Share this link — they'll touch the screen and watch a tree bloom just for them ✨</p>
+      <p class="result-hint">Share this link — they'll watch a tree bloom just for them ✨</p>
     </div>
 
     <p class="footer-note">BLOSSOM WISHES · MADE WITH LOVE</p>
@@ -516,7 +511,6 @@ function animBg() {
     bctx.save();
     bctx.translate(p.x, p.y); bctx.rotate(p.rot);
     bctx.globalAlpha = p.alpha;
-    // heart petal
     const s = p.r;
     bctx.beginPath();
     bctx.moveTo(0, 0);
@@ -548,7 +542,10 @@ const occ = document.getElementById('occasion');
 
 function loadPills(type) {
   pills.innerHTML = '';
-  const set = wishSets[type] || wishSets.birthday;
+  // Fallback cleanly to custom if type selection is blank or missing
+  const currentType = type && wishSets[type] ? type : 'custom';
+  const set = wishSets[currentType];
+  
   set.forEach(w => {
     const p = document.createElement('span');
     p.className = 'pick-pill';
@@ -561,8 +558,10 @@ function loadPills(type) {
     pills.appendChild(p);
   });
 }
+
+// Initial Run
 loadPills('birthday');
-occ.addEventListener('change', () => loadPills(occ.value || 'birthday'));
+occ.addEventListener('change', () => loadPills(occ.value));
 
 // ── Theme selection ──
 let selectedTheme = 'sakura';
@@ -578,10 +577,9 @@ function generateLink() {
   const recipient = document.getElementById('recipient').value.trim();
   const sender = document.getElementById('sender').value.trim();
   const message = msgBox.value.trim();
-  const occasion = occ.value;
+  const occasion = occ.value || 'custom';
 
   if (!recipient || !message) {
-    // Shake animation
     const card = document.querySelector('.card');
     card.style.animation = 'none';
     card.style.border = '1px solid rgba(233,30,140,0.6)';
@@ -595,7 +593,13 @@ function generateLink() {
     theme: selectedTheme,
     ts: Date.now()
   };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  
+  // Safe modern binary string generation handling UTF-8 data nicely
+  const jsonStr = JSON.stringify(data);
+  const bytes = new TextEncoder().encode(jsonStr);
+  const binStr = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+  const encoded = btoa(binStr);
+  
   const base = window.location.href.replace('index.html','').replace(/\/$/, '');
   generatedUrl = `${base}/blossom.html?d=${encoded}`;
 
