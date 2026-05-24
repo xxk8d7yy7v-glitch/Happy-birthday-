@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Magical Gift For You</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1a0f2e, #392257, #623e75);
+            font-family: 'Georgia', serif;
+        }
+        #interactionOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(26, 15, 46, 0.85);
+            color: #ffe5ec; font-size: 24px; text-align: center;
+            cursor: pointer; z-index: 10; transition: opacity 1s;
+            text-shadow: 0 0 10px rgba(255,182,193,0.6);
+        }
+        .pulse { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        #messageDisplay {
+            position: absolute; bottom: 10%; left: 50%;
+            transform: translateX(-50%);
+            width: 80%; max-width: 600px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px; border-radius: 20px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 194, 209, 0.3);
+            color: #fff; text-align: center; font-size: 20px;
+            line-height: 1.6; opacity: 0; z-index: 5;
+            transition: opacity 2s ease-in-out, transform 2s ease-in-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+<div id="interactionOverlay" onclick="startMagic()">
+    <div class="pulse">🌸 Tap anywhere on the screen to reveal your magic 🌸</div>
+</div>
+
+<canvas id="canvas"></canvas>
+<div id="messageDisplay"></div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Decode URL message
+    function getMessage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const msgBase64 = urlParams.get('msg');
+        if (msgBase64) {
+            try {
+                return decodeURIComponent(escape(atob(msgBase64)));
+            } catch (e) {
+                return "Wishing you a wonderful and magical day! 🌸";
+            }
+        }
+        return "Have a beautiful, wonderful day! 🌸 (Create your own custom link using index.html)";
+    }
+
+    document.getElementById('messageDisplay').innerText = getMessage();
+
+    function startMagic() {
+        const overlay = document.getElementById('interactionOverlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 1000);
+
+        // Animate the falling seed, then trigger tree growth
+        animateSeed(() => {
+            growTree();
+        });
+    }
+
+    // 1. Seed Animation
+    function animateSeed(callback) {
+        let seedY = 0;
+        const targetY = canvas.height - 50;
+        const seedX = canvas.width / 2;
+
+        function fall() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw a tiny glowing seed
+            ctx.beginPath();
+            ctx.arc(seedX, seedY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffb3c6';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff477e';
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset
+
+            if (seedY < targetY) {
+                seedY += 5;
+                requestAnimationFrame(fall);
+            } else {
+                // Flash effect upon hitting the floor
+                ctx.beginPath();
+                ctx.arc(seedX, targetY, 20, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 194, 209, 0.4)";
+                ctx.fill();
+                setTimeout(callback, 300);
+            }
+        }
+        fall();
+    }
+
+    // 2. Tree Generation Logic
+    let branches = [];
+    let petals = [];
+
+    function createBranch(startX, startY, len, angle, branchWidth, depth) {
+        branches.push({ startX, startY, len, angle, branchWidth, depth, currentLen: 0 });
+    }
+
+    function growTree() {
+        // Initialize trunk
+        createBranch(canvas.width / 2, canvas.height, 110, -Math.PI / 2, 14, 0);
+        animateGrowth();
+    }
+
+    function animateGrowth() {
+        let growing = false;
+        ctx.shadowBlur = 0;
+
+        // Draw branches progression
+        for (let i = 0; i < branches.length; i++) {
+            let b = branches[i];
+            if (b.currentLen < b.len) {
+                b.currentLen += 2; // growth speed
+                growing = true;
+            }
+
+            // Calculate current end position
+            let endX = b.startX + Math.cos(b.angle) * b.currentLen;
+            let endY = b.startY + Math.sin(b.angle) * b.currentLen;
+
+            ctx.beginPath();
+            ctx.moveTo(b.startX, b.startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineWidth = b.branchWidth;
+            ctx.strokeStyle = '#3d2314'; // Trunk wood color
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Spawn smaller branches once current branch finishes growing
+            if (b.currentLen >= b.len && !b.spawned && b.depth < 5) {
+                b.spawned = true;
+                let numBranches = 2 + Math.floor(Math.random() * 2); 
+                for (let j = 0; j < numBranches; j++) {
+                    let newAngle = b.angle + (Math.random() - 0.5) * 0.6;
+                    let newLen = b.len * (0.7 + Math.random() * 0.2);
+                    createBranch(endX, endY, newLen, newAngle, b.branchWidth * 0.65, b.depth + 1);
+                }
+            }
+
+            // If it's a leaf node/deep branch, sprinkle cherry blossoms
+            if (b.depth >= 3 && b.currentLen >= b.len && Math.random() < 0.15) {
+                spawnPetals(endX, endY);
+            }
+        }
+
+        if (growing) {
+            requestAnimationFrame(animateGrowth);
+        } else {
+            // Once tree finishes growing, softly bring up text and begin drifting petals
+            document.getElementById('messageDisplay').style.opacity = '1';
+            document.getElementById('messageDisplay').style.transform = 'translateX(-50%) translateY(-10px)';
+            animateBackgroundPetals();
+        }
+    }
+
+    function spawnPetals(x, y) {
+        // Draw standard clusters static on tree
+        ctx.beginPath();
+        ctx.arc(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20, 4 + Math.random() * 5, 0, Math.PI * 2);
+        ctx.fillStyle = ['#ffc2d1', '#ffe5ec', '#ffb3c6', '#ff85a1'][Math.floor(Math.random() * 4)];
+        ctx.fill();
+    }
+
+    // 3. Falling Petals Animation Loop
+    for (let i = 0; i < 40; i++) {
+        petals.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: 3 + Math.random() * 4,
+            d: Math.random() * 10,
+            speed: 1 + Math.random() * 2,
+            wobble: Math.random() * 2
+        });
+    }
+
+    function animateBackgroundPetals() {
+        // Re-draw background scene over canvas dynamically while preserving the tree snapshot
+        // To keep it simple without complex canvas buffers, we let background petals fall gracefully on top
+        ctx.fillStyle = "rgba(26, 15, 46, 0.04)"; // slight trails
+        
+        setInterval(() => {
+            petals.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffb3c6';
+                ctx.fill();
+
+                p.y += p.speed;
+                p.x += Math.sin(p.wobble) * 0.5;
+                p.wobble += 0.05;
+
+                if (p.y > canvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+        }, 30);
+    }
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>
