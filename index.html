@@ -1,140 +1,512 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create a Dreamy Wish</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ffe5ec, #ffc2d1);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            max-width: 450px;
-            width: 100%;
-            text-align: center;
-        }
-        h2 { color: #ff5c8a; margin-bottom: 20px; }
-        textarea {
-            width: 100%;
-            height: 100px;
-            border: 2px solid #ffb3c6;
-            border-radius: 10px;
-            padding: 10px;
-            box-sizing: border-box;
-            resize: none;
-            font-size: 16px;
-        }
-        textarea:focus { outline: none; border-color: #ff5c8a; }
-        .suggestions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        .tag {
-            background: #fff;
-            border: 1px solid #ffb3c6;
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #ff5c8a;
-            transition: 0.3s;
-        }
-        .tag:hover { background: #ff5c8a; color: white; }
-        button {
-            background: #ff5c8a;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 92, 138, 0.4);
-        }
-        button:hover { background: #ff477e; transform: translateY(-2px); }
-        #outputLink {
-            margin-top: 20px;
-            padding: 10px;
-            background: #fff;
-            border-radius: 10px;
-            border: 1px dashed #ff5c8a;
-            word-break: break-all;
-            display: none;
-        }
-        a { color: #ff477e; font-weight: bold; text-decoration: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BloomWish — Create a Living Wish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #e8a0b0;
+    --deep-rose: #c2607a;
+    --petal: #fce4ec;
+    --gold: #d4a853;
+    --cream: #fdf8f5;
+    --ink: #2d1b22;
+    --mist: rgba(255,255,255,0.55);
+    --shadow: rgba(45,27,34,0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Soft petal background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(232,160,176,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 90% 80%, rgba(212,168,83,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(252,228,236,0.4) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Floating petal canvas */
+  #petalCanvas {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 1;
+    opacity: 0.6;
+  }
+
+  .page-wrap {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 20px 60px;
+  }
+
+  /* Logo / Header */
+  .logo {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.9s ease both;
+  }
+  .logo-icon {
+    font-size: 2.4rem;
+    display: block;
+    margin-bottom: 8px;
+    animation: pulse 3s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
+  .logo h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--deep-rose);
+    line-height: 1;
+  }
+  .logo p {
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  /* Card */
+  .card {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(232,160,176,0.35);
+    border-radius: 28px;
+    padding: 44px 40px 48px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 8px 60px var(--shadow), 0 2px 12px rgba(232,160,176,0.18);
+    animation: fadeUp 1s ease 0.2s both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Field groups */
+  .field-group {
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--deep-rose);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  select, input[type="text"], textarea {
+    width: 100%;
+    background: rgba(252,228,236,0.28);
+    border: 1.5px solid rgba(232,160,176,0.4);
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    -webkit-appearance: none;
+  }
+  select:focus, input[type="text"]:focus, textarea:focus {
+    border-color: var(--rose);
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 0 3px rgba(232,160,176,0.18);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c2607a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.6;
+  }
+  input::placeholder, textarea::placeholder { color: rgba(45,27,34,0.35); }
+
+  /* Quick pick chips */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 50px;
+    border: 1.5px solid rgba(232,160,176,0.5);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    color: var(--deep-rose);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .chip:hover, .chip.active {
+    background: var(--deep-rose);
+    border-color: var(--deep-rose);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(194,96,122,0.3);
+  }
+
+  .chip-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(45,27,34,0.45);
+    margin-top: 14px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(232,160,176,0.25);
+    margin: 32px 0;
+  }
+
+  /* Recipient name */
+  .name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Color theme picker */
+  .theme-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .theme-swatch {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .theme-swatch:hover { transform: scale(1.15); }
+  .theme-swatch.selected::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px; font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .theme-swatch.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212,168,83,0.3);
+  }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    padding: 17px 24px;
+    background: linear-gradient(135deg, #c2607a 0%, #e8a0b0 100%);
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    margin-top: 36px;
+    transition: all 0.3s;
+    box-shadow: 0 6px 28px rgba(194,96,122,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .gen-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #a84e67 0%, #c2607a 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .gen-btn:hover::before { opacity: 1; }
+  .gen-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(194,96,122,0.5); }
+  .gen-btn:active { transform: translateY(0); }
+  .gen-btn span { position: relative; z-index: 1; }
+
+  /* Link output box */
+  .link-box {
+    display: none;
+    margin-top: 28px;
+    padding: 20px 20px 20px 24px;
+    background: rgba(252,228,236,0.5);
+    border: 1.5px solid rgba(232,160,176,0.5);
+    border-radius: 16px;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .link-box.show { display: flex; }
+  .link-url {
+    flex: 1;
+    font-size: 0.82rem;
+    color: var(--deep-rose);
+    word-break: break-all;
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.5;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    padding: 9px 18px;
+    background: var(--deep-rose);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .copy-btn:hover { background: var(--ink); }
+  .copy-toast {
+    display: none;
+    text-align: center;
+    color: var(--deep-rose);
+    font-size: 0.82rem;
+    margin-top: 10px;
+    letter-spacing: 0.05em;
+  }
+  .copy-toast.show { display: block; }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .card { padding: 32px 24px 36px; }
+    .name-row { grid-template-columns: 1fr; }
+    .logo h1 { font-size: 2.4rem; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Create a Magical Wish ✨</h2>
-    <p>Type a custom message or pick a template below:</p>
-    
-    <textarea id="wishMessage" placeholder="Type your birthday or anniversary wish here..."></textarea>
-    
-    <div class="suggestions">
-        <span class="tag" onclick="setTemplate('Happy Birthday! May your day be as bright and beautiful as a cherry blossom tree in full bloom! 🌸')">🎂 Birthday</span>
-        <span class="tag" onclick="setTemplate('Happy Anniversary! May your love continue to grow stronger and more beautiful with every passing year. 💕')">💑 Anniversary</span>
-        <span class="tag" onclick="setTemplate('Just a little reminder that you are deeply loved and appreciated. Have a magical day! ✨')">🌸 Just Because</span>
+<canvas id="petalCanvas"></canvas>
+
+<div class="page-wrap">
+  <div class="logo">
+    <span class="logo-icon">🌸</span>
+    <h1>BloomWish</h1>
+    <p>Grow a wish into something beautiful</p>
+  </div>
+
+  <div class="card">
+
+    <!-- Occasion -->
+    <div class="field-group">
+      <label>Occasion</label>
+      <select id="occasion">
+        <option value="">Choose an occasion…</option>
+        <option value="Birthday">🎂 Birthday</option>
+        <option value="Anniversary">💍 Anniversary</option>
+        <option value="Wedding">💒 Wedding</option>
+        <option value="Graduation">🎓 Graduation</option>
+        <option value="New Year">🎉 New Year</option>
+        <option value="Just Because">🌸 Just Because</option>
+      </select>
     </div>
-    
-    <button onclick="generateLink()">Generate Magical Link</button>
-    
-    <div id="outputLink">
-        <p>Share this link with them: 🎉</p>
-        <a id="shareableUrl" href="#" target="_blank"></a>
+
+    <!-- Names -->
+    <div class="field-group">
+      <label>From & To</label>
+      <div class="name-row">
+        <input type="text" id="fromName" placeholder="Your name…">
+        <input type="text" id="toName" placeholder="Their name…">
+      </div>
     </div>
+
+    <!-- Message -->
+    <div class="field-group">
+      <label>Your Wish</label>
+      <textarea id="wishText" placeholder="Write something from the heart…"></textarea>
+
+      <span class="chip-label">Quick picks — tap to add</span>
+      <div class="chips" id="chipContainer">
+        <button class="chip" data-text="May your day be as beautiful as you are 🌸">Beautiful day</button>
+        <button class="chip" data-text="Wishing you all the joy your heart can hold 💛">Pure joy</button>
+        <button class="chip" data-text="May every dream you chase bloom into reality 🌺">Dream big</button>
+        <button class="chip" data-text="You make the world brighter just by being in it ✨">You shine</button>
+        <button class="chip" data-text="Here's to new adventures and endless happiness 🎉">New adventures</button>
+        <button class="chip" data-text="May God bless you with love, health, and peace 🙏">God bless</button>
+        <button class="chip" data-text="So grateful to have you in my life ❤️">Gratitude</button>
+        <button class="chip" data-text="Another year, another layer of wonderfulness 🥂">Cheers</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Theme color -->
+    <div class="field-group">
+      <label>Tree Bloom Colour</label>
+      <div class="theme-row" id="themeRow">
+        <div class="theme-swatch selected" data-theme="sakura" style="background:linear-gradient(135deg,#ffb7c5,#e8a0b0)" title="Sakura Pink"></div>
+        <div class="theme-swatch" data-theme="gold" style="background:linear-gradient(135deg,#ffd89b,#d4a853)" title="Golden Sunrise"></div>
+        <div class="theme-swatch" data-theme="lavender" style="background:linear-gradient(135deg,#c9b8f0,#9b7fe8)" title="Lavender Dream"></div>
+        <div class="theme-swatch" data-theme="mint" style="background:linear-gradient(135deg,#a8edce,#56b899)" title="Mint Dew"></div>
+        <div class="theme-swatch" data-theme="sunset" style="background:linear-gradient(135deg,#ffa07a,#e05c4b)" title="Sunset Flame"></div>
+        <div class="theme-swatch" data-theme="celestial" style="background:linear-gradient(135deg,#74b9e7,#3a78c0)" title="Celestial Blue"></div>
+      </div>
+    </div>
+
+    <button class="gen-btn" onclick="generateLink()"><span>✨ Generate My Wish Link</span></button>
+
+    <div class="link-box" id="linkBox">
+      <div class="link-url" id="linkUrl"></div>
+      <button class="copy-btn" onclick="copyLink()">Copy</button>
+    </div>
+    <div class="copy-toast" id="copyToast">🌸 Link copied to clipboard!</div>
+
+  </div>
 </div>
 
 <script>
-    function setTemplate(text) {
-        document.getElementById('wishMessage').value = text;
-    }
+// ─── Floating petals background ───────────────────────────────────────────
+const cvs = document.getElementById('petalCanvas');
+const cx = cvs.getContext('2d');
+let petals = [];
 
-    function generateLink() {
-        const message = document.getElementById('wishMessage').value;
-        if (!message.trim()) {
-            alert("Please enter or pick a wish first!");
-            return;
-        }
-        
-        // Encode the message safely into Base64 format
-        const encodedMessage = btoa(unescape(encodeURIComponent(message)));
-        
-        // Get current page URL path and swap index.html for wish.html
-        let currentUrl = window.location.href.split('?')[0];
-        if (currentUrl.endsWith('index.html')) {
-            currentUrl = currentUrl.replace('index.html', 'wish.html');
-        } else if (currentUrl.endsWith('/')) {
-            currentUrl += 'wish.html';
-        } else {
-            currentUrl += '/wish.html';
-        }
-        
-        const finalUrl = `${currentUrl}?msg=${encodedMessage}`;
-        
-        const outputDiv = document.getElementById('outputLink');
-        const linkAnchor = document.getElementById('shareableUrl');
-        
-        linkAnchor.href = finalUrl;
-        linkAnchor.innerText = finalUrl;
-        outputDiv.style.display = 'block';
-    }
+function resizeCvs() {
+  cvs.width = window.innerWidth;
+  cvs.height = window.innerHeight;
+}
+resizeCvs();
+window.addEventListener('resize', resizeCvs);
+
+function mkPetal() {
+  return {
+    x: Math.random() * cvs.width,
+    y: -20,
+    r: Math.random() * 7 + 4,
+    vx: (Math.random() - 0.5) * 0.8,
+    vy: Math.random() * 0.7 + 0.3,
+    angle: Math.random() * Math.PI * 2,
+    va: (Math.random() - 0.5) * 0.03,
+    alpha: Math.random() * 0.5 + 0.2,
+    hue: Math.floor(Math.random() * 30) + 330, // pinks
+  };
+}
+for (let i = 0; i < 30; i++) {
+  let p = mkPetal();
+  p.y = Math.random() * cvs.height;
+  petals.push(p);
+}
+
+function drawPetal(p) {
+  cx.save();
+  cx.translate(p.x, p.y);
+  cx.rotate(p.angle);
+  cx.globalAlpha = p.alpha;
+  cx.beginPath();
+  cx.moveTo(0, 0);
+  cx.bezierCurveTo(-p.r, -p.r*1.5, -p.r*2, p.r*0.5, 0, p.r*2);
+  cx.bezierCurveTo(p.r*2, p.r*0.5, p.r, -p.r*1.5, 0, 0);
+  cx.fillStyle = `hsla(${p.hue},75%,80%,1)`;
+  cx.fill();
+  cx.restore();
+}
+
+function animPetals() {
+  cx.clearRect(0, 0, cvs.width, cvs.height);
+  petals.forEach(p => {
+    drawPetal(p);
+    p.x += p.vx; p.y += p.vy; p.angle += p.va;
+    if (p.y > cvs.height + 20) Object.assign(p, mkPetal());
+  });
+  requestAnimationFrame(animPetals);
+}
+animPetals();
+
+// ─── Chips ────────────────────────────────────────────────────────────────
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const ta = document.getElementById('wishText');
+    const txt = chip.dataset.text;
+    ta.value = ta.value ? ta.value + '\n' + txt : txt;
+    chip.classList.add('active');
+    setTimeout(() => chip.classList.remove('active'), 600);
+  });
+});
+
+// ─── Theme swatches ───────────────────────────────────────────────────────
+document.querySelectorAll('.theme-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('selected'));
+    sw.classList.add('selected');
+  });
+});
+
+// ─── Generate link ────────────────────────────────────────────────────────
+function generateLink() {
+  const occasion = document.getElementById('occasion').value;
+  const fromName = document.getElementById('fromName').value.trim();
+  const toName   = document.getElementById('toName').value.trim();
+  const wish     = document.getElementById('wishText').value.trim();
+  const theme    = document.querySelector('.theme-swatch.selected')?.dataset.theme || 'sakura';
+
+  if (!wish) {
+    document.getElementById('wishText').focus();
+    document.getElementById('wishText').style.borderColor = '#e8a0b0';
+    return;
+  }
+
+  const data = { occasion, from: fromName, to: toName, wish, theme };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const base = window.location.href.replace('index.html','').replace(/\/$/, '');
+  const link = `${base}/bloom.html#${encoded}`;
+
+  document.getElementById('linkUrl').textContent = link;
+  document.getElementById('linkBox').classList.add('show');
+  document.getElementById('linkBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyLink() {
+  const url = document.getElementById('linkUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const t = document.getElementById('copyToast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  });
+}
 </script>
 </body>
 </html>
