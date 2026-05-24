@@ -10,9 +10,23 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --pink-soft: #f8bbd9;
-    --gold: #d4a853;
+  /* ── HIGH-CONTRAST THEME PALETTES ── */
+  /* Upgraded color variables to vibrant, luminous tones for premium readability over video */
+  body.theme-sakura { 
+    --pink-soft: #ff85c0; /* Vibrant Neon Blossom Pink */
+    --gold: #ff2a8d;      /* Deep Radiant Rose */
+  }
+  body.theme-midnight { 
+    --pink-soft: #bfa3ff; /* Luminous Lavender Electric */
+    --gold: #00f0ff;      /* High-Visibility Cyan */
+  }
+  body.theme-gold { 
+    --pink-soft: #ffe57f; /* Bright Sunflower Gold */
+    --gold: #ff9100;      /* Vivid Electric Amber */
+  }
+  body.theme-ocean { 
+    --pink-soft: #64ffda; /* High-Gloss Vivid Aquamarine */
+    --gold: #00b0ff;      /* Bright Deep Sea Blue */
   }
 
   html, body {
@@ -43,7 +57,7 @@
   .video-overlay {
     position: absolute; 
     inset: 0;
-    background: radial-gradient(circle at center, transparent 10%, rgba(13, 5, 8, 0.6) 90%);
+    background: radial-gradient(circle at center, transparent 10%, rgba(13, 5, 8, 0.65) 95%);
     z-index: 1;
   }
 
@@ -68,17 +82,20 @@
     padding-left: 40px;
   }
 
-  /* Typography styling with shadows for readability over the video background */
+  /* Typography styling with deep geometric shadow stacks to maximize readability */
   .recipient-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(32px, 4.5vw, 46px);
-    font-weight: 300;
+    font-size: clamp(34px, 4.8vw, 50px);
+    font-weight: 400;
     letter-spacing: 0.05em;
     margin-bottom: 28px;
-    color: #fff;
+    color: #ffffff;
     line-height: 1.2;
     min-height: 55px; 
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 4px 20px rgba(0, 0, 0, 0.4);
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.9), 
+      0 4px 12px rgba(0, 0, 0, 0.7),
+      0 10px 30px rgba(0, 0, 0, 0.5);
   }
 
   .recipient-title em {
@@ -88,15 +105,18 @@
   }
 
   .message-body {
-    font-size: clamp(18px, 2.2vw, 24px);
+    font-size: clamp(20px, 2.4vw, 26px);
     font-weight: 300;
     line-height: 1.8;
-    color: rgba(255, 255, 255, 0.95);
+    color: #ffffff;
     margin-bottom: 40px;
     white-space: pre-wrap;
     max-width: 500px;
     min-height: 150px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 4px 20px rgba(0, 0, 0, 0.4);
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.9), 
+      0 4px 12px rgba(0, 0, 0, 0.7),
+      0 10px 30px rgba(0, 0, 0, 0.5);
   }
 
   .sender-signoff {
@@ -104,11 +124,11 @@
     font-size: 16px;
     font-style: italic;
     letter-spacing: 0.15em;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
     opacity: 0;
     transition: opacity 1s ease;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
   }
 
   .sender-signoff.show {
@@ -117,34 +137,31 @@
 
   .sender-signoff span {
     display: block;
-    margin-top: 6px;
+    margin-top: 8px;
     font-family: 'Crimson Pro', serif;
-    font-size: 26px;
+    font-size: 28px;
     font-style: normal;
     color: var(--gold);
     letter-spacing: 0.02em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.9),
+      0 4px 15px rgba(0, 0, 0, 0.6);
   }
 
   /* Blinking typewriter cursor indicator */
   .cursor {
     display: inline-block;
-    width: 2px;
-    height: 0.9em;
+    width: 2.5px;
+    height: 0.95em;
     background-color: var(--pink-soft);
-    margin-left: 4px;
+    margin-left: 5px;
     animation: blink 0.8s infinite;
     vertical-align: middle;
+    box-shadow: 0 0 8px var(--pink-soft);
   }
   @keyframes blink {
     50% { opacity: 0; }
   }
-
-  /* ── THEME PALETTES ── */
-  body.theme-sakura { --pink-soft: #f8bbd9; --gold: #e91e8c; }
-  body.theme-midnight { --pink-soft: #b388ff; --gold: #00e5ff; }
-  body.theme-gold { --pink-soft: #ffe082; --gold: #ffb300; }
-  body.theme-ocean { --pink-soft: #80deea; --gold: #26a69a; }
 
   /* Mobile Layout Adjustments */
   @media (max-width: 900px) {
@@ -162,15 +179,15 @@
 
   .audio-hint {
     position: absolute; bottom: 20px; left: 20px;
-    z-index: 15; background: rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.15);
+    z-index: 15; background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.2);
     padding: 8px 14px; border-radius: 30px;
     font-size: 12px; font-weight: 200; cursor: pointer;
     letter-spacing: 0.05em; transition: 0.3s; pointer-events: auto;
     user-select: none;
   }
   .audio-hint:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15);
   }
 </style>
 </head>
@@ -195,7 +212,24 @@
 </div>
 
 <script>
-let wishData = { recipient: "Someone", message: "A beautiful wish...", sender: "", theme: "sakura" };
+let wishData = { recipient: "Someone", message: "A beautiful wish...", sender: "", theme: "sakura", occasion: "custom" };
+
+// Unique greeting generator based directly on the created context occasion
+function generateOccasionGreeting(occasion, name) {
+  const cleanName = name || 'Someone';
+  const greetings = {
+    birthday: `Happy Birthday to the Wonderful ${cleanName},`,
+    anniversary: `To My Dearest ${cleanName},`,
+    graduation: `To the Inspiring ${cleanName},`,
+    new_year: `Happy New Year to ${cleanName},`,
+    love: `To My Beautiful Love, ${cleanName},`,
+    friendship: `To My Amazing Friend, ${cleanName},`,
+    farewell: `Wishing the Absolute Best to ${cleanName},`,
+    custom: `To My Dearest ${cleanName},`
+  };
+  
+  return greetings[occasion] || `To My Dearest ${cleanName},`;
+}
 
 // ── PARSE & DECODE LINK DATA ──
 function loadData() {
@@ -226,7 +260,7 @@ loadData();
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     startTypingSequence();
-  }, 6500);
+  }, 6000);
 });
 
 // ── TYPEWRITER ENGINE ──
@@ -257,7 +291,8 @@ function startTypingSequence() {
   const senderTarget = document.getElementById('view-sender');
   const signoffBlock = document.getElementById('sender-container');
 
-  const greetingText = `To My Dearest ${wishData.recipient || 'Someone'},`;
+  // Dynamically generate customized title lines based on parameters
+  const greetingText = generateOccasionGreeting(wishData.occasion, wishData.recipient);
   const bodyText = wishData.message || '';
   const signoffName = wishData.sender || '';
 
